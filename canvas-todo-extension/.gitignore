@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.*
+.eslintcache
+.vscode
+.serverless
+.webpack
+*.log
+build/**
+dist
+node_modules

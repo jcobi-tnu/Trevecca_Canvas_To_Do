@@ -1,0 +1,54 @@
+{
+  "name": "canvas-todo-extension",
+  "version": "1.0.0",
+  "description": "Canvas To Do extension for Ellucian Experience",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.3.0"
+  },
+  "scripts": {
+    "lint": "npx eslint --ext .jsx,.js src",
+    "canvas-build-dev": "webpack --config canvas-webpack.config.js --progress --mode development --env verbose",
+    "canvas-build-prod": "webpack --config canvas-webpack.config.js --progress --mode production --env verbose",
+    "canvas-deploy-dev": "webpack --config canvas-webpack.config.js --progress --mode development --env verbose --env upload",
+    "canvas-deploy-prod": "webpack --config canvas-webpack.config.js --progress --mode production --env verbose --env upload",
+    "canvas-watch-and-upload": "webpack --config canvas-webpack.config.js --hot --watch --mode development --env verbose --env upload --env forceUpload",
+    "canvas-start": "webpack serve --config canvas-webpack.config.js --mode development --env verbose --env liveReload"
+  },
+  "dependencies": {
+    "@ellucian/ds-icons": "https://cdn.elluciancloud.com/assets/EDS2/7.9.0/umd/path_design_system_icons.tgz",
+    "@ellucian/experience-extension-utils": "https://cdn.elluciancloud.com/assets/SDK/utils/1.0.0/ellucian-experience-extension-utils-1.0.0.tgz",
+    "@ellucian/react-design-system": "https://cdn.elluciancloud.com/assets/EDS2/7.9.0/umd/path_design_system.tgz",
+    "classnames": "2.3.2",
+    "idb-keyval": "6.2.0",
+    "loglevel": "1.8.1",
+    "prop-types": "15.7.2",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-intl": "5.12.5",
+    "string-template": "1.0.0",
+    "uuid": "8.3.2"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "7.17.0",
+    "@babel/plugin-transform-runtime": "7.12.1",
+    "@babel/preset-env": "7.12.1",
+    "@babel/preset-react": "7.12.1",
+    "@calm/eslint-plugin-react-intl": "1.4.1",
+    "@ellucian/experience-extension": "https://cdn.elluciancloud.com/assets/SDK/7.7.0/ellucian-experience-extension-7.7.0.tgz",
+    "babel-plugin-rewire": "1.2.0",
+    "cross-env": "7.0.2",
+    "dotenv": "8.6.0",
+    "dotenv-webpack": "7.1.1",
+    "eslint": "8.32.0",
+    "eslint-plugin-import": "2.25.4",
+    "eslint-plugin-jsx-a11y": "6.5.1",
+    "eslint-plugin-react": "7.28.0",
+    "webpack": "5.76.1",
+    "webpack-cli": "4.10.0",
+    "webpack-dev-server": "4.7.4"
+  }
+}

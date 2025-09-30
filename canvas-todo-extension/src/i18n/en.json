@@ -1,0 +1,22 @@
+{
+    "messages": {
+        "error.contentNotAvailable": "Content Not Available",
+        "error.contactYourAdministrator": "Contact your Administrator",
+        "canvas.permissionsRequested": "Canvas Login Required",
+        "canvas.noTasksTitle": "No assignments or tasks",
+        "canvas.noTasksMessage": "You don't have any upcoming assignments or to-do items.",
+        "canvas.noActiveTasksTitle": "No active assignments",
+        "canvas.noActiveTasksMessage": "All assignments are completed or hidden by filters.",
+        "canvas.todo.showCompleted": "Show completed",
+        "canvas.todo.due": "Due",
+        "canvas.todo.noDue": "No due date",
+        "canvas.todo.points": "points",
+        "canvas.courseName": "Course",
+        "signIn": "Sign in with Canvas",
+        "signOut": "Sign out",
+        "common.error": "Something went wrong",
+        "common.retry": "Retry",
+        "common.loading": "Loading…",
+        "common.refresh": "Refresh"
+    }
+}
