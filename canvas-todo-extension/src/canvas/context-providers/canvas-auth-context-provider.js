@@ -16,16 +16,26 @@ import log from 'loglevel';
 const logger = log.getLogger('Canvas');
 
 export function CanvasAuthProvider({ children }) {
-    const { getItem: cacheGetItem, storeItem: cacheStoreItem } = useCache();
+    const { storeItem: cacheStoreItem } = useCache();
     const { configuration: { canvasBaseUrl, canvasClientId } } = useCardInfo();
 
-    // Redirect URI is always the current Experience dashboard URL
-    const canvasRedirectUri = `${window.location.origin}${window.location.pathname}`;
+    // Redirect URI should be the base Experience URL without any path
+    // For example: https://experience.elluciancloud.com/tnu101/
+    const canvasRedirectUri = useMemo(() => {
+        const { origin, pathname } = window.location;
+        const basePath = `${pathname.split('/').slice(0, 2).join('/')}/`;
+        return `${origin}${basePath}`;
+    }, []);
 
     const [accessToken, setAccessToken] = useState(null);
     const [error, setError] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [state, setState] = useState('initialize');
+
+    // Log the redirect URI for debugging
+    useEffect(() => {
+        logger.debug('Canvas Redirect URI:', canvasRedirectUri);
+    }, [canvasRedirectUri]);
 
     // Initialize auth events
     useEffect(() => {
@@ -36,16 +46,14 @@ export function CanvasAuthProvider({ children }) {
     useEffect(() => {
         if (state === 'initialize') {
             (async () => {
-                // First check if we're handling an OAuth callback
                 const urlParams = new URLSearchParams(window.location.search);
+
                 if (urlParams.get('code') && urlParams.get('state')) {
-                    // We're returning from Canvas OAuth, trigger login completion
                     logger.debug('Detected OAuth callback, completing login');
                     setState('do-login');
                     return;
                 }
 
-                // Otherwise check for existing auth
                 const hasAuth = await checkExistingAuth();
                 if (hasAuth) {
                     const token = await getAccessToken({
@@ -74,15 +82,11 @@ export function CanvasAuthProvider({ children }) {
                             canvasBaseUrl,
                             canvasClientId,
                             canvasRedirectUri,
-                            cacheGetItem,
                             cacheStoreItem
                         });
+
                         if (success) {
-                            const token = await getAccessToken({
-                                canvasBaseUrl,
-                                canvasClientId,
-                                canvasRedirectUri
-                            });
+                            const token = await getAccessToken();
                             if (token) {
                                 setAccessToken(token);
                                 setLoggedIn(true);
@@ -108,11 +112,7 @@ export function CanvasAuthProvider({ children }) {
 
             case 'event-login':
                 (async () => {
-                    const token = await getAccessToken({
-                        canvasBaseUrl,
-                        canvasClientId,
-                        canvasRedirectUri
-                    });
+                    const token = await getAccessToken();
                     if (token) {
                         setAccessToken(token);
                         setLoggedIn(true);
@@ -130,7 +130,7 @@ export function CanvasAuthProvider({ children }) {
             default:
                 break;
         }
-    }, [state, canvasBaseUrl, canvasClientId, canvasRedirectUri, cacheGetItem, cacheStoreItem]);
+    }, [state, canvasBaseUrl, canvasClientId, canvasRedirectUri, cacheStoreItem]);
 
     const contextValue = useMemo(() => ({
         accessToken,
