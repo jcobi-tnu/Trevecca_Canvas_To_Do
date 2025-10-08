@@ -16,7 +16,7 @@ const lastLoginKey = 'canvas-last-login';
 // Replace this with your actual Cloudflare Worker URL
 const TOKEN_PROXY_URL =
   process.env.CANVAS_TOKEN_PROXY_URL ||
-  'https://canvas-oauth-proxy.your-username.workers.dev';
+  'https://canvas-todo-oauth-proxy.tnuappdev.workers.dev/';
 
 // Generate a random string for state parameter
 function generateRandomString(length) {

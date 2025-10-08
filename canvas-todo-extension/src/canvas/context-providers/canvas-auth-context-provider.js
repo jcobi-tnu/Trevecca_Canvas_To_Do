@@ -1,5 +1,6 @@
 // Canvas Authentication Context Provider
 
+/* eslint-disable camelcase */
 import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useCache, useCardInfo } from '@ellucian/experience-extension-utils';
@@ -17,7 +18,9 @@ const logger = log.getLogger('Canvas');
 
 export function CanvasAuthProvider({ children }) {
     const { storeItem: cacheStoreItem } = useCache();
-    const { configuration: { canvasBaseUrl, canvasClientId } } = useCardInfo();
+    const {
+        configuration: { canvasBaseUrl, canvasClientId }
+    } = useCardInfo();
 
     // Redirect URI should be the base Experience URL without any path
     // For example: https://experience.elluciancloud.com/tnu101/
@@ -44,39 +47,39 @@ export function CanvasAuthProvider({ children }) {
 
     // Check for existing authentication on mount
     useEffect(() => {
-        if (state === 'initialize') {
-            (async () => {
-                const urlParams = new URLSearchParams(window.location.search);
+        if (state !== 'initialize') {return;}
 
-                if (urlParams.get('code') && urlParams.get('state')) {
-                    logger.debug('Detected OAuth callback, completing login');
-                    setState('do-login');
-                    return;
-                }
+        (async () => {
+            const urlParams = new URLSearchParams(window.location.search);
 
-                const hasAuth = await checkExistingAuth();
-                if (hasAuth) {
-                    const token = await getAccessToken({
-                        canvasBaseUrl,
-                        canvasClientId,
-                        canvasRedirectUri,
-                        tryExisting: true
-                    });
-                    if (token) {
-                        setAccessToken(token);
-                        setLoggedIn(true);
-                    }
+            if (urlParams.get('code') && urlParams.get('state')) {
+                logger.debug('Detected OAuth callback, completing login');
+                setState('do-login');
+                return;
+            }
+
+            const hasAuth = await checkExistingAuth();
+            if (hasAuth) {
+                const token = await getAccessToken({
+                    canvasBaseUrl,
+                    canvasClientId,
+                    canvasRedirectUri,
+                    tryExisting: true
+                });
+                if (token) {
+                    setAccessToken(token);
+                    setLoggedIn(true);
                 }
-                setState('ready');
-            })();
-        }
+            }
+            setState('ready');
+        })();
     }, [state, canvasBaseUrl, canvasClientId, canvasRedirectUri]);
 
     // Handle state changes
     useEffect(() => {
-        switch (state) {
-            case 'do-login':
-                (async () => {
+        const handleAuthState = async () => {
+            switch (state) {
+                case 'do-login':
                     try {
                         const success = await login({
                             canvasBaseUrl,
@@ -86,7 +89,11 @@ export function CanvasAuthProvider({ children }) {
                         });
 
                         if (success) {
-                            const token = await getAccessToken();
+                            const token = await getAccessToken({
+                                canvasBaseUrl,
+                                canvasClientId,
+                                canvasRedirectUri
+                            });
                             if (token) {
                                 setAccessToken(token);
                                 setLoggedIn(true);
@@ -98,55 +105,62 @@ export function CanvasAuthProvider({ children }) {
                         setError(true);
                         setState('ready');
                     }
-                })();
-                break;
+                    break;
 
-            case 'do-logout':
-                (async () => {
+                case 'do-logout':
                     await logout();
                     setAccessToken(null);
                     setLoggedIn(false);
                     setState('ready');
-                })();
-                break;
+                    break;
 
-            case 'event-login':
-                (async () => {
-                    const token = await getAccessToken();
+                case 'event-login': {
+                    const token = await getAccessToken({
+                        canvasBaseUrl,
+                        canvasClientId,
+                        canvasRedirectUri
+                    });
                     if (token) {
                         setAccessToken(token);
                         setLoggedIn(true);
                     }
                     setState('ready');
-                })();
-                break;
+                    break;
+                }
 
-            case 'event-logout':
-                setAccessToken(null);
-                setLoggedIn(false);
-                setState('ready');
-                break;
+                case 'event-logout':
+                    setAccessToken(null);
+                    setLoggedIn(false);
+                    setState('ready');
+                    break;
 
-            default:
-                break;
-        }
+                default:
+                    break;
+            }
+        };
+
+        handleAuthState();
     }, [state, canvasBaseUrl, canvasClientId, canvasRedirectUri, cacheStoreItem]);
 
-    const contextValue = useMemo(() => ({
-        accessToken,
-        canvasBaseUrl,
-        error,
-        login: () => setState('do-login'),
-        logout: () => setState('do-logout'),
-        loggedIn,
-        setLoggedIn,
-        state: state === 'ready' || state === 'do-logout' ? 'ready' : 'not-ready',
-        getAccessToken: () => getAccessToken({
+    const contextValue = useMemo(
+        () => ({
+            accessToken,
             canvasBaseUrl,
-            canvasClientId,
-            canvasRedirectUri
-        })
-    }), [accessToken, canvasBaseUrl, error, loggedIn, state, canvasClientId, canvasRedirectUri]);
+            error,
+            login: () => setState('do-login'),
+            logout: () => setState('do-logout'),
+            loggedIn,
+            setLoggedIn,
+            state: state === 'ready' || state === 'do-logout' ? 'ready' : 'not-ready',
+            getAccessToken: () =>
+                getAccessToken({
+                    canvasBaseUrl,
+                    canvasClientId,
+                    canvasRedirectUri
+                })
+        }),
+        [accessToken, canvasBaseUrl, error, loggedIn, state, canvasClientId, canvasRedirectUri]
+    );
 
     useEffect(() => {
         logger.debug('CanvasAuthProvider mounted');
@@ -155,11 +169,7 @@ export function CanvasAuthProvider({ children }) {
         };
     }, []);
 
-    return (
-        <Context.Provider value={contextValue}>
-            {children}
-        </Context.Provider>
-    );
+    return <Context.Provider value={contextValue}>{children}</Context.Provider>;
 }
 
 CanvasAuthProvider.propTypes = {

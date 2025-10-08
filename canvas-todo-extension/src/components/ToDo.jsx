@@ -128,9 +128,12 @@ function ToDo({ classes }) {
         [locale]
     );
 
-    const visible = useMemo(() => {
-        return showCompleted ? tasks : tasks.filter(t => t.status !== 'completed');
-    }, [tasks, showCompleted]);
+    const safeTasks = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks]);
+
+    const visible = useMemo(
+        () => (showCompleted ? safeTasks : safeTasks.filter(t => t?.status !== 'completed')),
+        [safeTasks, showCompleted]
+    );
 
     useEffect(() => {
         if (authError || todoError) {
@@ -154,6 +157,7 @@ function ToDo({ classes }) {
         setLoadingStatus(displayState === 'loading');
     }, [displayState, setLoadingStatus]);
 
+    // --- Different UI states ---
     if (displayState === 'loggedOut') {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: spacing40 }}>
@@ -200,7 +204,7 @@ function ToDo({ classes }) {
         );
     }
 
-    const emptyMsg = showCompleted ? components?.noTasks : components?.noActiveTasks;
+    const emptyMsg = showCompleted ? components?.noTasks || {} : components?.noActiveTasks || {};
 
     if (displayState === 'loaded' && visible.length === 0) {
         return (
@@ -230,10 +234,10 @@ function ToDo({ classes }) {
                 <div style={{ textAlign: 'center', padding: spacing40 }}>
                     <Illustration name={IMAGES.CHECKLIST} />
                     <Typography variant="h4" component="div" style={{ marginTop: spacing30 }}>
-                        {intl.formatMessage({ id: emptyMsg?.titleId || 'canvas.noTasksTitle' })}
+                        {intl.formatMessage({ id: emptyMsg.titleId || 'canvas.noTasksTitle' })}
                     </Typography>
                     <Typography variant="body2" style={{ opacity: 0.75, marginTop: spacing30 }}>
-                        {intl.formatMessage({ id: emptyMsg?.messageId || 'canvas.noTasksMessage' })}
+                        {intl.formatMessage({ id: emptyMsg.messageId || 'canvas.noTasksMessage' })}
                     </Typography>
                 </div>
 
@@ -245,6 +249,7 @@ function ToDo({ classes }) {
         );
     }
 
+    // --- Main UI ---
     return (
         <div className={classes.card}>
             <div className={classes.topBar}>
@@ -252,7 +257,7 @@ function ToDo({ classes }) {
                     <Checkbox
                         checked={showCompleted}
                         onChange={e => setShowCompleted(e.target?.checked ?? false)}
-                        />
+                    />
                     <Typography variant="body2">
                         {intl.formatMessage({ id: 'canvas.todo.showCompleted' })}
                     </Typography>
@@ -272,6 +277,8 @@ function ToDo({ classes }) {
             <div className={classes.content}>
                 <List dense>
                     {visible.map(t => {
+                        if (!t?.id) {return null;}
+
                         const labelId = `canvas-todo-item-${t.id}`;
                         const primary = t.link ? (
                             <a
@@ -280,9 +287,11 @@ function ToDo({ classes }) {
                                 rel="noopener noreferrer"
                                 style={{ textDecoration: 'none', color: 'inherit' }}
                             >
-                                {t.title}
+                                {t.title || 'Untitled'}
                             </a>
-                        ) : t.title;
+                        ) : (
+                            t.title || 'Untitled'
+                        );
 
                         const dueText = t.due
                             ? `${intl.formatMessage({ id: 'canvas.todo.due' })}: ${formatter.format(new Date(t.due))}`
@@ -311,7 +320,7 @@ function ToDo({ classes }) {
                                                     )}
                                                     {t.points && (
                                                         <Typography variant="caption" color="textSecondary">
-                                                            {t.points} {intl.formatMessage({ id: 'canvas.todo.points' })}
+                                                            {`${t.points} ${intl.formatMessage({ id: 'canvas.todo.points' })}`}
                                                         </Typography>
                                                     )}
                                                 </div>

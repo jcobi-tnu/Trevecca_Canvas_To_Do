@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import log from 'loglevel';
 import { useAuth } from '../../context-hooks/auth-context-hooks';
 import { ToDoContext } from '../../context-hooks/todo-context-hooks';
+import { callCanvasAPI } from '../util/canvas-api';
 
 const logger = log.getLogger('Canvas');
 const refreshInterval = 60000;
@@ -53,28 +54,27 @@ export function CanvasToDoProvider({ children }) {
             }
 
             // Fetch to-do items
-            const todoResponse = await fetch(`${canvasBaseUrl}/api/v1/users/self/todo`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            // Fetch to-do items via proxy
+            const todoItems = await callCanvasAPI({
+                canvasBaseUrl,
+                endpoint: '/api/v1/users/self/todo',
+                accessToken: token,
+                method: 'GET'
             });
+            console.log('📋 Todo items response:', todoItems);
+            console.log('📋 Is array?', Array.isArray(todoItems));
 
-            if (!todoResponse.ok) {
-                throw new Error(`Canvas API error: ${todoResponse.status}`);
-            }
-
-            const todoItems = await todoResponse.json();
-
-            // Fetch planner items
-            const plannerResponse = await fetch(`${canvasBaseUrl}/api/v1/planner/items`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
+            // Fetch planner items via proxy
             let plannerItems = [];
-            if (plannerResponse.ok) {
-                plannerItems = await plannerResponse.json();
+            try {
+                plannerItems = await callCanvasAPI({
+                    canvasBaseUrl,
+                    endpoint: '/api/v1/planner/items',
+                    accessToken: token,
+                    method: 'GET'
+                });
+            } catch (e) {
+                logger.warn('Could not fetch planner items:', e);
             }
 
             // Combine and format tasks
